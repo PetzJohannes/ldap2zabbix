@@ -1,110 +1,105 @@
 # LDAP user Zabbix sync
 This script allows you to sync your LDAP users to Zabbix.
 
+## Compatible Zabbix version
+- 5.2
+
+## Compatible LDAP Servers
+- Microsoft Active Directory
+
 ## Features
 - Sync given LDAP groups to Zabbix
 - Sync LDAP users of given group to Zabbix
-- Define permissions for LDAP groups and LDAP users
-- Delete given LDAP groups and LDAP users in this groups in Zabbix
-- Zabbix version >= 3: Update usergroups only if changes are found
+- Define permissions for LDAP groups
+- Define tag permissions for LDAP groups
+- Define user role
+- Remove deleted LDAP users from Zabbix
+- Remove no longer configured LDAP groups from Zabbix
 
 ## Requirements
-- pyzabbix
-- ldap3
-- python3.4
+- Python3 (`requirements.txt`)
+- LDAP Surfer
+- Zabbix API user with the permissions for
+  * `Administration/User groups`
+  * `Administration/User roles`
+  * `Administration/Users`
+  * `Access to API`
 
-## Tested Zabbix version
-- 2.4
-- 3.0
+# How to
+1. Copy the `config.example.yaml` to `config.yaml` or whatever you want.
+    ```
+    cp config.example.yaml config.yaml
+    ```
+2. Proceed with configuration
+3. Run the sync
+    ```
+    python3 ldap2zabbix.py
+    ```
 
-# Configuration
-Open the ldap2zabbix.py.
+> For more run `python3 ldap2zabbix.py -h`
 
-| Setting    | Default value              | Description                                              |
-|------------|----------------------------|----------------------------------------------------------|
-| zabbixurl  | https://zabbix.example.org | Zabbix web url                                           |
-| zabbixuser | admin                      | Should be an internal admin                              |
-| zabbixpass |                            | Users password                                           |
-| sysusers   | ["Admin", "guest"]         | Array of internal users. Will be protected from deletion |
-| ldapurl    | ldap://ldap.example.org    | Your LDAP(s) url                                         |
-| basedn     | dc=example,dc=org          | Your LDAP base dn                                        |
-| groups     | [ ]                        | LDAP groups to sync (See below)                          |
-| delgroups  | [ ]                        | LDAP groups to delete in Zabbix                          |
-
-## Delgroups
-Example:
-```python
-delgroups = ["firstgroup", "secondgroup"]
+## Zabbix configuration
 ```
-All given groups will be deleted.
-
-## Deleteusers
-All users without LDAP groups and not in "sysusers" will be deleted.
-
-## Groups
-| Setting | Description                          |
-|---------|--------------------------------------|
-| name    | LDAP group name                      |
-| type    | Zabbix user access type (see below)  |
-| rights  | Zabbix group permissions (see below) |
-Example:
-```python
-groups = [
-    {
-        'name': 'superadmingroup',
-        'type': 3,
-        'rights': [
-        ]
-    },
-    {
-        'name': 'admingroup',
-        'type': 2,
-        'rights': [
-            {
-                'permission': 3,
-                'name': 'Linux server'
-            },
-            {
-                'permission': 3,
-                'name': 'Windows server'
-            }
-        ]
-    },
-    {
-        'name': 'viewergroup',
-        'type': 1,
-        'rights': [
-            {
-                'permission': 2,
-                'name': 'Linux server'
-            }
-        ]
-    }
-]
+zabbix:
+  url: 
+  user: 
+  password: 
+  default-role: 
 ```
-This example syncs all members of "superadmingroup", "admingroup" and "viewergroup" to Zabbix.
+| Setting        | Example value              | Description                                              |
+|----------------|----------------------------|----------------------------------------------------------|
+| url            | https://zabbix.com         | URL of your zabbix server                                |
+| user           | zabbix-ldap-sync           | Zabbix API User                                          |
+| password       | test                       | Zabbix API User password                                 |
+| default-role   | ldap-user-role             | Default role for each user. Roles can be configured per group. See group configuration. |
+| disabled-group | Disabled-LDAP-Users        | Default value: 'Disabled-LDAP-Users'.                    |
 
-### Type
-| Type | Description             |
-|------|-------------------------|
-| 1    | (Default) User          |
-| 2    | Zabbix Admin User       |
-| 3    | Zabbix Super Admin User |
+> If users are owners of Dashboards, Maps, etc. and cannot be deleted, the users will be disabled with the 
+> `disabled-group` group.
+> The `disabled-group` will be managed (created, updated) automatically!
 
-[Zabbix API User object docu](https://www.zabbix.com/documentation/2.4/manual/api/reference/user/object#user)
+## LDAP configuration
+```
+ldap:
+  uri:
+  bindUser:
+  bindPassword:
+```
+| Setting      | Example value                | Description                                              |
+|--------------|------------------------------|----------------------------------------------------------|
+| uri          | ldaps://ldap.example.org:636 | Your LDAP(s) uri                                         |
+| bindUser     | CN=surfer,DC=example,DC=org  | LDAP bind dn, default: ''                                |
+| bindPassword | password                     | LDAP users password, default: ''                         |
 
-[Zabbix Permission docu](https://www.zabbix.com/documentation/2.4/manual/config/users_and_usergroups/permissions)
+## Group configuration
+```
+groups:
+  - name: "user-group-from-ldap"
+    dn: CN=Zabbix_Users,OU=Groups,DC=example,DC=com
+    permissions:
+      - group: Linux servers
+        permission: read-only
+        tags:
+          - name: Mytag
+            value: somevalue
+```
 
-### Rights
-A dict with Zabbix "host group" element names and permissions. Multiple groups can be defined
+For each group, you can define the following:
 
-| Permission | Description       |
-|------------|-------------------|
-| 0          | access denied     |
-| 2          | read-only access  |
-| 3          | read-write access |
+| Setting                | Example value                               | Required | Description                                                                                  |
+|------------------------|---------------------------------------------|----------|----------------------------------------------------------------------------------------------|
+| name                   | user-group-from-ldap                        | yes      | Zabbix group name                                                                            |
+| dn                     | CN=Zabbix_Users,OU=Groups,DC=example,DC=org | yes      | LDAP bind dn                                                                                 |
+| role                   | another zabbix role                         | no       | If you want to specify another role as the default role, configured in zabbix.default-role.  |
+| permissions            |                                             | yes      | Array of permissions                                                                         |
+| permissions.group      | Linux servers                               | yes      | Zabbix hostgroup name                                                                        |
+| permissions.permission | read-only                                   | no       | Permission for the complete hostgroup. Allowed values: ['read-only', 'read-write', 'denied'] |
+| permissions.tags       |                                             | no       | Array of tag permissions                                                                     |
+| permissions.tags.name  | MYTAG                                       | no       | Tag name within the `group` to permit user action                                            |
+| permissions.tags.value | somevalue                                   | no       | Tag value                                                                                    |
 
-[Zabbix API User group object docu](https://www.zabbix.com/documentation/2.4/manual/api/reference/usergroup/object#permission)
+> Every user can have only one role. So the last specified role in the groups array is taken for this (or the default role).
+> If you have multiple roles configured for groups a user is member, be aware that he will get the last configured one!
 
 # Roadmap
 - [ ] Support media types for users

@@ -1,0 +1,26 @@
+---
+zabbix:
+  url:
+  user:
+  password:
+  default-role:
+
+ldap:
+  uri:
+  ldapUserBaseDn:
+  bindUser:
+  bindPassword:
+
+groups:
+  - name: "user-group-from-ldap"
+    dn: CN=Zabbix_Users,OU=Groups,DC=example,DC=com
+    permissions:
+      - group: Linux servers
+        permission: read-only
+        tags:
+          - name: Mytag
+            value: somevalue
+
+  - name: "administrator-group-from-ldap"
+    dn: CN=Zabbix_Admins,OU=Groups,DC=example,DC=com
+    role: 'ldap-super-admin-role'

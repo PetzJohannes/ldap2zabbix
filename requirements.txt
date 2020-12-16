@@ -1,0 +1,4 @@
+ldap3~=2.8.1
+py-zabbix~=1.1.7
+PyYAML~=5.3.1
+deepdiff~=5.0.2
