@@ -7,7 +7,6 @@ zabbix:
 
 ldap:
   uri:
-  ldapUserBaseDn:
   bindUser:
   bindPassword:
 

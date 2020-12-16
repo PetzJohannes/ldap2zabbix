@@ -262,7 +262,7 @@ class Zabbix:
         # update group with userids
         self.zapi.usergroup.update(
             usrgrpid=disabled_group_id,
-            userids=users # list(map(lambda u: {'userid': u}, users))
+            userids=users
         )
 
     def logout(self):

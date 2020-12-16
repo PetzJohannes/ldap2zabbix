@@ -50,6 +50,12 @@ if __name__ == '__main__':
     ldapUri = config['ldap']['uri']
     ldapBindUser = config['ldap'].get('bindUser')
     ldapBindPassword = config['ldap'].get('bindPassword')
+    ldapObjectGroup = config['ldap'].get('objectGroup')
+    ldapObjectUser = config['ldap'].get('objectUser')
+    ldapAttributeMember = config['ldap'].get('attributeMember')
+    ldapAttributeLastName = config['ldap'].get('attributeLastName')
+    ldapAttributeFirstName = config['ldap'].get('attributeFirstName')
+    ldapAttributeUsername = config['ldap'].get('attributeUsername')
 
     # sync configuration
     syncGroups = config['groups']
@@ -58,7 +64,13 @@ if __name__ == '__main__':
     ldap = LDAP(
         uri=ldapUri,
         bind_user=ldapBindUser,
-        bind_password=ldapBindPassword
+        bind_password=ldapBindPassword,
+        object_group=ldapObjectGroup,
+        object_user=ldapObjectUser,
+        attribute_member=ldapAttributeMember,
+        attribute_last_name=ldapAttributeLastName,
+        attribute_first_name=ldapAttributeFirstName,
+        attribute_username=ldapAttributeUsername
     )
 
     # define Zabbix
@@ -109,7 +121,6 @@ if __name__ == '__main__':
 
     # Updating users
     for user in users:
-
         # create or update Zabbix users from LDAP
         zabbix.user_update_or_create(users[user])
 

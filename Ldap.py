@@ -7,18 +7,24 @@ class LDAP(object):
     LDAP connection class
     """
     connection = None
-    objectGroup = 'group'
-    objectUser = 'person'
-    attributeMember = 'member'
-    attributeLastName = 'sn'
-    attributeFirstName = 'givenName'
-    attributeUsername = 'sAMAccountName'
+    objectGroup = None
+    objectUser = None
+    attributeMember = None
+    attributeLastName = None
+    attributeFirstName = None
+    attributeUsername = None
 
     def __init__(
             self,
             uri,
             bind_user=None,
-            bind_password=None
+            bind_password=None,
+            object_group=None,
+            object_user=None,
+            attribute_member=None,
+            attribute_last_name=None,
+            attribute_first_name=None,
+            attribute_username=None
     ):
         server = Server(
             uri
@@ -31,6 +37,13 @@ class LDAP(object):
             auto_bind=True,
             auto_referrals=False
         )
+
+        self.objectGroup = object_group or 'group'
+        self.objectUser = object_user or 'user'
+        self.attributeMember = attribute_member or 'member'
+        self.attributeLastName = attribute_last_name or 'sn'
+        self.attributeFirstName = attribute_first_name or 'givenName'
+        self.attributeUsername = attribute_username or 'sAMAccountName'
 
     def get_group(self, group_dn):
         self.connection.search(

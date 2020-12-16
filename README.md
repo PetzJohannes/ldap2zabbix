@@ -44,15 +44,15 @@ zabbix:
   url: 
   user: 
   password: 
-  default-role: 
+  default-role:
 ```
-| Setting        | Example value              | Description                                              |
-|----------------|----------------------------|----------------------------------------------------------|
-| url            | https://zabbix.com         | URL of your zabbix server                                |
-| user           | zabbix-ldap-sync           | Zabbix API User                                          |
-| password       | test                       | Zabbix API User password                                 |
-| default-role   | ldap-user-role             | Default role for each user. Roles can be configured per group. See group configuration. |
-| disabled-group | Disabled-LDAP-Users        | Default value: 'Disabled-LDAP-Users'.                    |
+| Setting        | Example value                  | Description                                                                             |
+|----------------|--------------------------------|-----------------------------------------------------------------------------------------|
+| url            | https://zabbix.com             | URL of your zabbix server                                                               |
+| user           | zabbix-ldap-sync               | Zabbix API User                                                                         |
+| password       | test                           | Zabbix API User password                                                                |
+| default-role   | ldap-user-role                 | Default role for each user. Roles can be configured per group. See group configuration. |
+| disabled-group | Default: `Disabled-LDAP-Users` | Group for disabled users.                                                               |
 
 > If users are owners of Dashboards, Maps, etc. and cannot be deleted, the users will be disabled with the 
 > `disabled-group` group.
@@ -65,11 +65,29 @@ ldap:
   bindUser:
   bindPassword:
 ```
-| Setting      | Example value                | Description                                              |
-|--------------|------------------------------|----------------------------------------------------------|
-| uri          | ldaps://ldap.example.org:636 | Your LDAP(s) uri                                         |
-| bindUser     | CN=surfer,DC=example,DC=org  | LDAP bind dn, default: ''                                |
-| bindPassword | password                     | LDAP users password, default: ''                         |
+| Setting            | Example value                | Description                                              |
+|--------------------|------------------------------|----------------------------------------------------------|
+| uri                | ldaps://ldap.example.org:636 | Your LDAP(s) uri                                         |
+| bindUser           | CN=surfer,DC=example,DC=org  | LDAP bind dn, default: ''                                |
+| bindPassword       | password                     | LDAP users password, default: ''                         |
+| objectGroup        | Default: `group`             | LDAP group object.                                       |
+| objectUser         | Default: `user`              | LDAP user object.                                        |
+| attributeMember    | Default: `member`            | LDAP group attribute for members.                        |
+| attributeLastName  | Default: `sn`                | LDAP user attribute for last name.                       |
+| attributeFirstName | Default: `givenName`         | LDAP user attribute for first name.                      |
+| attributeUsername  | Default: `sAMAccountName`    | LDAP user attribute for `username` (`alias`) field.      |
+
+> Default values are for active directory.
+### OpenLDAP
+Standard OpenLDAP configuration:
+```
+ldap:
+  uri:
+  bindUser:
+  bindPassword:
+  objectUser: person
+  attributeUsername: cn
+```
 
 ## Group configuration
 ```
