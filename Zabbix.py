@@ -88,12 +88,13 @@ class Zabbix:
                     })
 
                 # add tags for this group
-                for tag in hostgroup['tags']:
-                    group['tag_filters'].append({
-                        'groupid': z_group_id,
-                        'tag': tag['name'],
-                        'value': tag['value']
-                    })
+                if 'tags' in hostgroup:
+                    for tag in hostgroup['tags']:
+                        group['tag_filters'].append({
+                            'groupid': z_group_id,
+                            'tag': tag['name'],
+                            'value': tag['value']
+                        })
 
         response = self.zapi.usergroup.get(
             output=['name', 'gui_access', 'users_status'],
