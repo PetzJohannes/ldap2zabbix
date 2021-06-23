@@ -3,7 +3,7 @@ from Ldap import LDAP
 import logging
 import yaml
 from Zabbix import Zabbix
-from pyzabbix.api import ZabbixAPIException
+from pyzabbix import ZabbixAPIException
 
 if __name__ == '__main__':
 
@@ -41,8 +41,20 @@ if __name__ == '__main__':
     # set configuration options
     # Zabbix configuration
     zabbixUrl = config['zabbix']['url']
-    zabbixUser = config['zabbix']['user']
-    zabbixPassword = config['zabbix']['password']
+
+    zabbixUser = ''
+    zabbixPassword = ''
+    zabbixApiToken = None
+    if 'user' in config['zabbix'] and 'password' in config['zabbix']:
+        zabbixUser = config['zabbix']['user'] or ''
+        zabbixPassword = config['zabbix']['password'] or ''
+
+    elif 'token' in config['zabbix']:
+        zabbixApiToken = config['zabbix']['token']
+    else:
+        print("Username and password or token not given in config.zabbix")
+        exit(2)
+
     zabbixDefaultRole = config['zabbix']['default-role']
     zabbixDisabledGroup = config['zabbix'].get('disabled-group', 'Disabled-LDAP-Users')
 
@@ -77,7 +89,8 @@ if __name__ == '__main__':
     zabbix = Zabbix(
         url=zabbixUrl,
         user=zabbixUser,
-        password=zabbixPassword
+        password=zabbixPassword,
+        api_token=zabbixApiToken
     )
 
     users = {}
@@ -104,7 +117,7 @@ if __name__ == '__main__':
             # if user is not in cache, add to cache
             if username not in users:
                 users[username] = {
-                    'alias': username,
+                    'username': username,
                     'name': ldapUser['givenName'],
                     'surname': ldapUser['sn'],
                     'usrgrps': [],
@@ -129,7 +142,7 @@ if __name__ == '__main__':
     z_users = zabbix.get_ldap_users()
 
     # check difference between Zabbix and actual LDAP users
-    delete_users = [u['userid'] for u in z_users if u['alias'] not in users]
+    delete_users = [u['userid'] for u in z_users if u['username'] not in users]
 
     # delete users
     try:

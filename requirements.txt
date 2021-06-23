@@ -1,4 +1,4 @@
-ldap3~=2.8.1
-py-zabbix~=1.1.7
+ldap3==2.9
+git+https://github.com/lukecyca/pyzabbix.git
 PyYAML>=5.4
-deepdiff~=5.0.2
+deepdiff==5.5.0

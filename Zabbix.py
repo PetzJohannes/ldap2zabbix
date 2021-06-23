@@ -22,18 +22,20 @@ class Zabbix:
     zapi = None
     hostGroups = {}
     roles = {}
+    token = False
 
     def __init__(
             self,
             url,
             user,
-            password
+            password,
+            api_token=None
     ):
-        self.zapi = ZabbixAPI(
-            url,
-            user=user,
-            password=password
-        )
+        self.zapi = ZabbixAPI(url)
+        self.zapi.login(user, password, api_token=api_token)
+
+        if api_token:
+            self.token = True
 
     def get_host_group(self, name):
 
@@ -50,11 +52,11 @@ class Zabbix:
         )
 
         if len(response) > 1:
-            logging.error("Multiple Zabbix users found with same alias.")
+            logging.error("Multiple Zabbix users found with same username.")
             raise Exception("Multiple Zabbix users found.")
 
         if len(response) == 0:
-            logging.info(f"No hostgroup fond for {name}.")
+            logging.info(f"No hostgroup found for {name}.")
             return False
 
         return response[0]['groupid']
@@ -106,7 +108,7 @@ class Zabbix:
         )
 
         if len(response) > 1:
-            logging.error("Multiple Zabbix users found with same alias.")
+            logging.error("Multiple Zabbix users found with same username.")
             raise Exception("Multiple Zabbix users found.")
 
         if len(response) == 0:
@@ -167,20 +169,20 @@ class Zabbix:
             user
     ):
         response = self.zapi.user.get(
-            output=['userid', 'alias', 'name', 'surname', 'roleid'],
+            output=['userid', 'username', 'name', 'surname', 'roleid'],
             selectUsrgrps=['usrgrpid'],
             filter={
-                'alias': user['alias']
+                'username': user['username']
             }
         )
 
         if len(response) > 1:
-            logging.error("Multiple Zabbix users found with same alias.")
+            logging.error("Multiple Zabbix users found with same username.")
             raise Exception("Multiple Zabbix users found.")
 
         if len(response) == 0:
             # create new user
-            logging.info(f"Creating new User {user['alias']}")
+            logging.info(f"Creating new User {user['username']}")
 
             return self.zapi.user.create(
                 **user
@@ -198,7 +200,7 @@ class Zabbix:
 
         # update Zabbix user
         if diff:
-            logging.info(f"Updating user {user['alias']} with id {z_user_id}.")
+            logging.info(f"Updating user {user['username']} with id {z_user_id}.")
             self.zapi.user.update(
                 userid=z_user_id,
                 **user
@@ -228,7 +230,7 @@ class Zabbix:
 
         # get all users because we cannot filter by gui_access flag.
         z_users = self.zapi.user.get(
-            output=['userid', 'alias'],
+            output=['userid', 'username'],
             getAccess=True
         )
 
@@ -270,7 +272,12 @@ class Zabbix:
         """
         Logout from the Zabbix session.
         """
-        response = self.zapi.user.logout()
 
-        if not response:
-            logging.debug("Zabbix logout failed.")
+        if not self.token:
+            response = self.zapi.user.logout()
+
+            if not response:
+                logging.debug("Zabbix logout failed.")
+
+        if self.token:
+            logging.debug("Zabbix logout not required. Using api token.")
