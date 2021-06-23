@@ -2,7 +2,13 @@
 This script allows you to sync your LDAP users to Zabbix.
 
 ## Compatible Zabbix version
-- 5.2
+### 5.4
+Use the master branch.
+
+### 5.2 or older
+Use this release:
+https://github.com/PetzJohannes/ldap2zabbix/releases/tag/5.2
+
 
 ## Compatible LDAP Servers
 - Microsoft Active Directory
