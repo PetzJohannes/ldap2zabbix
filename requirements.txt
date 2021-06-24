@@ -1,4 +1,4 @@
 ldap3==2.9
-git+https://github.com/lukecyca/pyzabbix.git
+pyzabbix==1.0.0
 PyYAML>=5.4
 deepdiff==5.5.0
